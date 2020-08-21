@@ -2,6 +2,95 @@
 
 This repo is just an approach for the Django Rest Framework TK exercise
 
+## Exercise
+
+Create a CRUD API with Django and DRF that allows you to CRUD recipes and add/delete ingredients to it.  Test it using postman or similar.
+
+Entity details:
+```
+Recipe: Name, Description
+Ingredient: Name, Recipe (ForeignKey) ← assume a given ingredient belongs only to one recipe, even if that means multiple Ingredient instances with the exact same name.
+```
+
+## API contract
+
+### Example recipe creation
+```
+POST /recipes/
+{
+	“name”: “Pizza”
+	“description”: “Put it in the oven”,
+	“ingredients”: [{“name”: “dough”}, {“name”: “cheese”}, {“name”: “tomato”}]
+}
+
+Response:
+{
+	“id”: 1,
+	“name”: “Pizza”
+	“description”: “Put it in the oven”,
+	“ingredients”: [{“name”: “dough”}, {“name”: “cheese”}, {“name”: “tomato”}]
+}
+```
+
+### Example recipe list
+```
+GET /recipes/
+[
+    {
+	“id”: 1,
+      “name”: “Pizza”
+	“description”: “Put it in the oven”,
+	“ingredients”: [{“name”: “dough”}, {“name”: “cheese”}, {“name”: “tomato”}]
+    }
+]
+
+
+Add search view by name substring:
+GET /recipes/?name=Pi
+[
+    {
+      “id”: 1,
+	“name”: “Pizza”
+	“description”: “Put it in the oven”,
+	“ingredients”: [{“name”: “dough”}, {“name”: “cheese”}, {“name”: “tomato”}]
+    }
+]
+```
+
+### Example recipe edit
+```
+PATCH /recipes/1/
+    {
+	“name”: “Pizza”
+	“description”: “Put it in the oven”,
+	“ingredients”: [{“name”: “casa-tarradellas”}]
+    }
+
+
+Should delete the previous existing ingredients and put “casa-tarradellas” as only ingredient for recipe.
+
+Response:
+{
+	“id”: 1,
+	“name”: “Pizza”
+	“description”: “Put it in the oven”,
+	“ingredients”: [{“name”: “casa-tarradellas”}]
+}
+```
+
+### Example recipe delete
+
+```
+DELETE /recipes/1/
+
+
+Response:
+HTTP 204 (NO CONTENT)
+
+
+Should delete the targeted recipe AND its ingredients.
+```
+
 ## Build
 
 The following command will build the docker images:
