@@ -1,3 +1,5 @@
+from django.utils.translation import gettext as _
+
 from rest_framework import serializers
 
 from recipe.models import Ingredient, Recipe
@@ -14,7 +16,12 @@ class IngredientSerializer(serializers.ModelSerializer):
 class RecipeSerializer(serializers.ModelSerializer):
     """Serializer for Recipe object"""
     # not allowing recipes with empty ingredients for now
-    ingredients = IngredientSerializer(many=True, allow_empty=False)
+    ingredients = IngredientSerializer(
+        many=True, allow_empty=False,
+        error_messages={
+            'required': _('You have to specify ingredients for your recipe')
+        }
+    )
 
     class Meta:
         model = Recipe

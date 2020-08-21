@@ -101,6 +101,11 @@ class PublicRecipeApiTests(TestCase):
 
         res = self.client.post(RECIPES_URL, payload)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            res.data,
+            {'ingredients': ["You have to specify ingredients "
+                             "for your recipe"]}
+        )
 
     def test_partial_update_recipe(self):
         """Test updating (partially) a recipe"""
