@@ -16,7 +16,7 @@ def ingredient_detail_url(recipe_id):
 
 
 def sample_ingredient(recipe, name='Some ingredient'):
-    """Create a sample ingredient for a recipe performing the associations"""
+    """Create a sample ingredient and adding it to a recipe"""
     ingredient = Ingredient.objects.create(name=name, recipe=recipe)
     recipe.ingredients.add(ingredient)
     return ingredient
@@ -50,7 +50,6 @@ class PublicRecipeApiTests(TestCase):
         serializer = RecipeSerializer(recipes, many=True)
 
         res = self.client.get(RECIPES_URL)
-
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
 
@@ -85,17 +84,15 @@ class PublicRecipeApiTests(TestCase):
                                    {'name': 'more stuff'}]}
 
         res = self.client.post(RECIPES_URL, payload)
-
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
         recipe = Recipe.objects.filter(name=payload['name']).first()
         self.assertEqual(recipe.name, payload['name'])
         self.assertEqual(recipe.description, payload['description'])
-        ingredients = recipe.ingredients.all()
-        ingredient_names = [ing.name for ing in ingredients]
-        self.assertEqual(len(ingredients), 3)
-        for ingredient_payload in payload['ingredients']:
-            self.assertIn(ingredient_payload['name'], ingredient_names)
+        self.assertEqual(
+            set([ingr.name for ingr in recipe.ingredients.all()]),
+            set([ingr_pl['name'] for ingr_pl in payload['ingredients']])
+        )
 
     def test_create_recipe_with_empty_ingredients(self):
         """Test creating a new recipe with empty ingredients fails"""
@@ -103,7 +100,6 @@ class PublicRecipeApiTests(TestCase):
                    'description': 'Bla bla bla'}
 
         res = self.client.post(RECIPES_URL, payload)
-
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_partial_update_recipe(self):
@@ -116,22 +112,21 @@ class PublicRecipeApiTests(TestCase):
 
         url = ingredient_detail_url(recipe.id)
         res = self.client.patch(url, payload)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
 
         recipe.refresh_from_db()
-        ingredients = recipe.ingredients.all()
+        # verify that no update on this field
+        self.assertEqual(recipe.name, orig_name)
+        self.assertEqual(recipe.description, payload['description'])
+        self.assertEqual(
+            [ingr.name for ingr in recipe.ingredients.all()],
+            [payload['ingredients'][0]['name']]
+        )
 
         # should delete previous existing ingredient
         old_ingredient_exists = Ingredient.objects.filter(
             id=old_ingredient.id
         ).exists()
-
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        # verify that no update on this field
-        self.assertEqual(recipe.name, orig_name)
-        self.assertEqual(recipe.description, payload['description'])
-        self.assertEqual(len(ingredients), 1)
-        self.assertEqual(ingredients[0].name,
-                         payload['ingredients'][0]['name'])
         # verify that old ingredient has been removed
         self.assertFalse(old_ingredient_exists)
 
@@ -148,21 +143,20 @@ class PublicRecipeApiTests(TestCase):
 
         url = ingredient_detail_url(recipe.id)
         res = self.client.put(url, payload)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
 
         recipe.refresh_from_db()
-        ingredients = recipe.ingredients.all()
+        self.assertEqual(recipe.name, payload['name'])
+        self.assertEqual(recipe.description, payload['description'])
+        self.assertEqual(
+            [ingr.name for ingr in recipe.ingredients.all()],
+            [payload['ingredients'][0]['name']]
+        )
 
         # should delete previous existing ingredient
         old_ingredient_exists = Ingredient.objects.filter(
             id=old_ingredient.id
         ).exists()
-
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(recipe.name, payload['name'])
-        self.assertEqual(recipe.description, payload['description'])
-        self.assertEqual(len(ingredients), 1)
-        self.assertEqual(ingredients[0].name,
-                         payload['ingredients'][0]['name'])
         # verify that old ingredient has been removed
         self.assertFalse(old_ingredient_exists)
 
@@ -173,8 +167,7 @@ class PublicRecipeApiTests(TestCase):
 
         url = ingredient_detail_url(recipe.id)
         res = self.client.delete(url)
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
 
         exists = Recipe.objects.filter(id=recipe.id).exists()
-
-        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(exists)
