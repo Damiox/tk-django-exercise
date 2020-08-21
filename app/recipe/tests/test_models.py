@@ -58,4 +58,3 @@ class ModelTests(TestCase):
 
         self.assertEqual(recipe_counts, 2)
         self.assertEqual(ingredient_counts, 4)
-
