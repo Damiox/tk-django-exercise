@@ -90,8 +90,8 @@ class PublicRecipeApiTests(TestCase):
         self.assertEqual(recipe.name, payload['name'])
         self.assertEqual(recipe.description, payload['description'])
         self.assertEqual(
-            set([ingr.name for ingr in recipe.ingredients.all()]),
-            set([ingr_pl['name'] for ingr_pl in payload['ingredients']])
+            {ingr.name for ingr in recipe.ingredients.all()},
+            {ingr_pl['name'] for ingr_pl in payload['ingredients']}
         )
 
     def test_create_recipe_with_empty_ingredients(self):
