@@ -38,10 +38,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'corsheaders',  # @see https://github.com/ottoyiu/django-cors-headers/
     'recipe',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -121,6 +123,11 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+# django cors
+# https://github.com/adamchainz/django-cors-headers#configuration
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^http://localhost:\d+",
+]
 
 # django rest framework
 # https://www.django-rest-framework.org/api-guide/settings/
